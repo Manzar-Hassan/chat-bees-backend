@@ -33,7 +33,6 @@ let onlineUsers = {};
 
 async function createMongoConnection() {
   const client = new MongoClient(MONGO_URL);
-  const mongoCollection = client.db(DB).collection(CHAT_COLLECTION);
 
   await client.connect();
   // io.adapter(createAdapter(mongoCollection))
@@ -163,8 +162,6 @@ app.post("/roomConversations", async (req, res) => {
     await client.db(DB).collection(CHAT_COLLECTION).find({ roomId }).toArray()
   ).sort();
 
-  console.log(roomId, req.body);
-
   res.status(200).send(conversations);
 });
 
@@ -174,7 +171,6 @@ io.on("connection", (socket) => {
   //user online status:
   socket.on("user-online", (username) => {
     onlineUsers[socket.id] = username;
-    console.log(onlineUsers);
 
     io.emit("user-status-online", onlineUsers);
   });
@@ -182,13 +178,11 @@ io.on("connection", (socket) => {
   socket.on("join-room", (roomId) => {
     //joining the desired room:
     socket.join(roomId);
-    console.log("connected to room: ", roomId);
   });
 
   //leaving the current room before joining next room:
   socket.on("leave-room", (roomId) => {
     socket.leave(roomId);
-    console.log("left the room: ", roomId);
   });
 
   //sending messages from client side
@@ -209,9 +203,7 @@ io.on("connection", (socket) => {
   //removing all the listeners when user disconnects
   socket.on("disconnect", () => {
     delete onlineUsers[socket.id];
-    console.log(onlineUsers)
     io.emit("user-status-online", onlineUsers);
-    console.log("user disconnected: " + socket.id);
     socket.removeAllListeners();
   });
 });
